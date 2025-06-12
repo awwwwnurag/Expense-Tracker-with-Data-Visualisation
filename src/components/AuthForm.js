@@ -1,42 +1,66 @@
 import React, { useState, useContext } from 'react';
-import { Paper, TextField, Button, Box, Typography, Tabs, Tab, Link, useTheme } from '@mui/material';
+import { Paper, TextField, Button, Box, Typography, Tabs, Tab, Link, useTheme, Dialog, DialogTitle, DialogContent, DialogActions, Alert } from '@mui/material';
 import { AuthContext } from '../context/AuthContext';
 import GoogleIcon from '@mui/icons-material/Google';
-import FacebookIcon from '@mui/icons-material/Facebook';
 
 const AuthForm = () => {
   const [tabIndex, setTabIndex] = useState(0);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const { login, signup, forgotPassword, signInWithGoogle, signInWithFacebook } = useContext(AuthContext);
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [signupEmail, setSignupEmail] = useState('');
+  const { login, signup } = useContext(AuthContext);
   const theme = useTheme(); // Use theme hook
   const darkMode = theme.palette.mode === 'dark'; // Determine dark mode state
+  const [openForgotPassword, setOpenForgotPassword] = useState(false);
+  const [email, setEmail] = useState('');
+  const [signupError, setSignupError] = useState('');
 
   const handleTabChange = (event, newValue) => {
     setTabIndex(newValue);
+    setUsername('');
+    setPassword('');
+    setConfirmPassword('');
+    setSignupEmail('');
+    setSignupError('');
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
+    setSignupError(''); // Clear previous errors
+
     if (tabIndex === 0) { // Login
-      await login(username, password);
+      login(username, password);
     } else { // Signup
-      await signup(username, password);
+      if (password !== confirmPassword) {
+        setSignupError('Passwords do not match.');
+        return;
+      }
+      signup(username, password);
     }
     setUsername('');
     setPassword('');
+    setConfirmPassword('');
+    setSignupEmail('');
   };
 
   const handleGoogleLogin = () => {
-    signInWithGoogle();
-  };
-
-  const handleFacebookLogin = () => {
-    signInWithFacebook();
+    alert('Sign in with Google not implemented yet.');
+    // Implement Google login logic here
   };
 
   const handleForgotPassword = () => {
-    forgotPassword(username);
+    setOpenForgotPassword(true);
+  };
+
+  const handleCloseForgotPassword = () => {
+    setOpenForgotPassword(false);
+    setEmail('');
+  };
+
+  const handleResetPassword = () => {
+    alert(`Password reset link sent to ${email}`);
+    handleCloseForgotPassword();
   };
 
   return (
@@ -84,6 +108,32 @@ const AuthForm = () => {
               },
             }}
           />
+
+          {tabIndex === 1 && (
+            <TextField
+              label="Email"
+              type="email"
+              value={signupEmail}
+              onChange={(e) => setSignupEmail(e.target.value)}
+              fullWidth
+              required
+              InputLabelProps={{
+                style: { color: theme.palette.text.secondary },
+              }}
+              InputProps={{
+                style: { color: theme.palette.text.primary },
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 12,
+                  '&:hover fieldset': {
+                    borderColor: 'primary.light',
+                  },
+                },
+              }}
+            />
+          )}
+
           <TextField
             label="Password"
             type="password"
@@ -106,6 +156,40 @@ const AuthForm = () => {
               },
             }}
           />
+
+          {tabIndex === 1 && (
+            <TextField
+              label="Re-enter Password"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              fullWidth
+              required
+              error={password !== confirmPassword && confirmPassword !== ''}
+              helperText={password !== confirmPassword && confirmPassword !== '' ? 'Passwords do not match' : ''}
+              InputLabelProps={{
+                style: { color: theme.palette.text.secondary },
+              }}
+              InputProps={{
+                style: { color: theme.palette.text.primary },
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 12,
+                  '&:hover fieldset': {
+                    borderColor: 'primary.light',
+                  },
+                },
+              }}
+            />
+          )}
+
+          {signupError && (
+            <Alert severity="error" sx={{ mt: 2, borderRadius: 2 }}>
+              {signupError}
+            </Alert>
+          )}
+
           <Button
             type="submit"
             variant="contained"
@@ -158,26 +242,29 @@ const AuthForm = () => {
               >
                 Google
               </Button>
-              <Button 
-                variant="outlined" 
-                fullWidth 
-                startIcon={<FacebookIcon />} 
-                onClick={handleFacebookLogin}
-                sx={{
-                  borderColor: theme.palette.divider,
-                  color: theme.palette.text.primary,
-                  '&:hover': {
-                    backgroundColor: theme.palette.action.hover,
-                    borderColor: theme.palette.primary.main,
-                  },
-                }}
-              >
-                Facebook
-              </Button>
             </Box>
           )}
         </Box>
       </form>
+
+      <Dialog open={openForgotPassword} onClose={handleCloseForgotPassword}>
+        <DialogTitle>Forgot Password</DialogTitle>
+        <DialogContent>
+          <TextField
+            label="Email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            fullWidth
+            required
+            margin="normal"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseForgotPassword}>Cancel</Button>
+          <Button onClick={handleResetPassword} color="primary">Reset Password</Button>
+        </DialogActions>
+      </Dialog>
     </Paper>
   );
 };

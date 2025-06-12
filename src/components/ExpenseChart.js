@@ -215,7 +215,7 @@ const ExpenseChart = () => {
       </Typography>
       <Box sx={{ mb: 4, height: { xs: 300, md: 400 }, display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
         <Box sx={{ flexGrow: 1, height: '100%' }}>
-          <Pie data={chartData} options={options} />
+        <Pie data={chartData} options={options} />
         </Box>
         <Box sx={{ 
           display: 'flex',
